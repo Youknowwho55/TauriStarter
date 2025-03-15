@@ -2,7 +2,7 @@
 
 // src/routes/auth/login/+server.js
 import { redirect } from "@sveltejs/kit";
-import { google } from "@auth/core/providers/google";
+import google from "@auth/core/providers/google";
 
 export const GET = async ({ url, locals }) => {
   const redirectUri = `${url.origin}/auth/callback`;

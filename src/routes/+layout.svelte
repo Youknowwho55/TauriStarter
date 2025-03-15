@@ -4,7 +4,7 @@
   import "../app.css";
 
   import { onMount } from "svelte";
-  import { initializeDatabase } from "$lib/services/db.ts";
+  import { initializeDatabase } from "$lib/auth/db";
   import Breadcrumb from "$lib/components/Breadcrumb.svelte";
 
   onMount(async () => {

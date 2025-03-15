@@ -1,80 +1,53 @@
 <!-- @format -->
-<!-- // src/routes/profiles/+page.svelte -->
+<!-- src/routes/profiles/+page.svelte -->
 <script>
-  import { enhance, applyAction } from "$app/forms";
-  import { invalidateAll } from "$app/navigation";
-  import Input from "$lib/components/Input.svelte";
-  import Pencil from "$lib/components/icons/Pencil.svelte";
-  let loading;
+  export let data;
 
-  $: loading = false;
-  const showPreview = (event) => {
-    const target = event.target;
-    const files = target.files;
+  let user = data.user;
+  let success = false;
+  let errors = {};
 
-    if (files.length > 0) {
-      const src = URL.createObjectURL(files[0]);
-      preview.src = src;
+  async function updateProfile(event) {
+    const formData = new FormData(event.target);
+
+    const response = await fetch("/profiles", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      success = true;
+    } else {
+      errors = result.errors;
     }
-  };
-
-  const submitUpdateProfile = () => {
-    loading = true;
-    return async ({ result }) => {
-      switch (result.type) {
-        case "success":
-          await invalidateAll();
-          break;
-        case "error":
-          break;
-        default:
-          await applyAction(result);
-      }
-      loading = false;
-    };
-  };
+  }
 </script>
+{#if user}
+  <h1>Welcome, {user.name}!</h1>
 
-<div class="flex flex-col w-full h-full">
-  <form
-    action="?/updateProfile"
-    method="POST"
-    class="flex flex-col space-y-2 w-full"
-    enctype="multipart/form-data"
-    use:enhance={submitUpdateProfile}
-  >
-    <h3 class="text-2xl font-medium">Update Profile</h3>
-    <div class="form-control w-full max-w-lg">
-      <label for="avatar" class="label font-medium pb-1">
-        <span class="label-text">Profile Picture</span>
-      </label>
-      <label for="avatar" class="avatar w-32 rounded-full hover:cursor-pointer">
-        <label
-          for="avatar"
-          class="absolute -bottom-0.5 -right-0.5 hover:cursor-pointer"
-        >
-          <span class="btn btn-circle btn-sm btn-secondary">
-            <Pencil width="48" height="48" strokeColor="blue" />
-          </span>
-        </label>
-        <div class="w-32 rounded-full"></div>
-      </label>
-    </div>
-    <Input
-      id="name"
-      label="Name"
-      value={form?.data?.name ?? data?.user?.name}
-      disabled={loading}
-      errors={form?.errors?.name}
-    />
-    <div class="w-full max-w-lg pt-3">
-      <button
-        class="btn btn-primary w-full max-w-lg"
-        type="submit"
-        disabled={loading}
-      >
-        Update Profile
-      </button>
-    </div>
+  <form on:submit|preventDefault={updateProfile}>
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name" value={user.name} />
+
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" value={user.email} />
+
+    <button type="submit">Update Profile</button>
   </form>
-</div>
+
+  {#if success}
+    <p>Profile updated successfully!</p>
+  {/if}
+
+  {#if Object.keys(errors).length > 0}
+    <ul>
+      {#each Object.entries(errors) as [field, message]}
+        <li>{field}: {message}</li>
+      {/each}
+    </ul>
+  {/if}
+{:else}
+  <p>Please <a href="/login">log in</a> to view your profile.</p>
+{/if}
